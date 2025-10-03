@@ -107,8 +107,15 @@ pipeline {
             steps {
                 script {
                     echo "Deploying to Kubernetes using Helm..."
-                    withCredentials([usernamePassword(credentialsId: 'argocd', usernameVariable: 'ARGO_USERNAME', passwordVariable: 'ARGO_PASSWORD')]) {
+
+                    // Use the argocd1 credentials to set the KUBECONFIG
+                    withCredentials([file(credentialsId: 'argocd1', variable: 'KUBECONFIG')]) {
+                        // Test the Kubernetes connection
                         sh """
+                            echo "Checking Kubernetes connection..."
+                            kubectl get nodes || exit 1  # Test the connection to Kubernetes
+
+                            echo "Deploying with Helm..."
                             helm upgrade --install my-python-app ./path/to/helm/chart --set image.tag=${IMAGE_TAG} --set service.type=NodePort --set service.nodePort=30976
                         """
                     }
