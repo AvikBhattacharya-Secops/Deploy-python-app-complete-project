@@ -5,8 +5,11 @@ image:
 replicaCount: 3  # Number of replicas for the deployment
 
 service:
-  type: LoadBalancer  # Type of service (could also be NodePort or ClusterIP)
-
+  type: NodePort  # Set to NodePort for UI exposure
+  port: 80  # External port (on the service)
+  targetPort: 80  # Port inside the pod (this is already 80)
+  nodePort: 30080  # Specific port on which the service will be exposed (choose an available port)
+  
 resources: {}
 
 
