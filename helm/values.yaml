@@ -2,7 +2,7 @@
 
 image:
   repository: avikbhattacharya056/my-python-app-image
-  tag: 16
+  tag: 18
 
 replicaCount: 3  # Number of replicas for the deployment
 
