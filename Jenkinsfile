@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'helm-installed-node' }  // Ensure the job runs on the node where Helm is installed
 
     environment {
         // Jenkins credentials
@@ -23,6 +23,15 @@ pipeline {
                 script {
                     echo "Cloning from GitHub main branch..."
                     checkout scm
+                }
+            }
+        }
+
+        stage('Check Helm Version') {
+            steps {
+                script {
+                    echo "Checking Helm installation..."
+                    sh "helm version"
                 }
             }
         }
