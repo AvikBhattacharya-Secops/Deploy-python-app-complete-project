@@ -5,7 +5,6 @@ pipeline {
         // Jenkins credentials
         DOCKERHUB_CREDENTIALS = credentials('docker-hub-creds')              // DockerHub
         GIT_CREDENTIALS = credentials('GitAccess')                          // GitHub access
-        AWS_CREDENTIALS = credentials('aws-credentials-id') 
         ARGOCD_CREDENTIALS = credentials('argocd')                         // ArgoCD access
 
         // AWS and DockerHub details
@@ -59,10 +58,10 @@ pipeline {
         stage('Update Helm values.yaml') {
             steps {
                 script {
-                    // Update the Helm values.yaml with the new image tag
+                    // Update the Helm values.yaml with the new image tag and NodePort
                     sh """
                     sed -i 's/tag: .*/tag: $IMAGE_TAG/' path/to/helm/values.yaml
-                    sed -i 's/nodePort: .*/nodePort: 30001/' path/to/helm/values.yaml  # Ensure NodePort is set
+                    sed -i 's/nodePort: .*/nodePort: 30976/' path/to/helm/values.yaml  # Update NodePort to 30976
                     """
                 }
             }
@@ -73,7 +72,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'argocd', usernameVariable: 'ARGO_USERNAME', passwordVariable: 'ARGO_PASSWORD')]) {
                         sh """
-                        helm upgrade --install my-python-app ./path/to/helm/chart --set image.tag=$IMAGE_TAG --set service.type=NodePort --set service.nodePort=30001
+                        helm upgrade --install my-python-app ./path/to/helm/chart --set image.tag=$IMAGE_TAG --set service.type=NodePort --set service.nodePort=30976
                         """
                     }
                 }
@@ -83,9 +82,9 @@ pipeline {
         stage('Expose App via NodePort') {
             steps {
                 script {
-                    // Expose the app on NodePort via Helm (if not already exposed in service.yaml)
+                    // Expose the app on NodePort (30976)
                     sh """
-                    kubectl expose deployment my-python-app --type=NodePort --name=my-python-app-service --port=80 --target-port=80 --node-port=30001
+                    kubectl expose deployment my-python-app --type=NodePort --name=my-python-app-service --port=80 --target-port=80 --node-port=30976
                     """
                 }
             }
