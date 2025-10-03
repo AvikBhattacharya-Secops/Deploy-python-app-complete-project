@@ -1,13 +1,15 @@
-replicaCount: 3
-
 image:
-  repository: "avikbhattacharya056/my-python-app-image"
-  tag: "latest"  # This will be updated by the pipeline with $IMAGE_TAG
+  repository: myrepo/python-app  # Your image repository
+  tag: v1.0.0  # Your image tag
+
+replicaCount: 3  # Number of replicas for the deployment
 
 service:
-  type: LoadBalancer  # Expose your app via a load balancer  type: LoadBalancer
-  port: 80
-  targetPort: 8080
+  type: LoadBalancer  # Type of service (could also be NodePort or ClusterIP)
+
+resources: {}
+
+
 
 
 
