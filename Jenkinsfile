@@ -18,54 +18,92 @@ pipeline {
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                checkout scm
+                script {
+                    echo "Cloning from GitHub main branch..."
+                    // Checkout the repo using the Git plugin with credentials
+                    checkout scm
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t $DOCKERHUB_REPO:$IMAGE_TAG ."
+                    echo "Building Docker image..."
+                    sh "docker build -t ${DOCKERHUB_REPO}:${IMAGE_TAG} ."
+                    sh "docker tag ${DOCKERHUB_REPO}:${IMAGE_TAG} ${ECR_REPO}:${IMAGE_TAG}"
                 }
             }
         }
 
-        stage('Push Docker Image to DockerHub') {
+        stage('Push to DockerHub') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
-                        sh "docker push $DOCKERHUB_REPO:$IMAGE_TAG"
-                    }
-                }
-            }
-        }
-
-        stage('Push Docker Image to AWS ECR') {
-            steps {
-                script {
-                    withCredentials([aws(credentialsId: 'aws-credentials-id')]) {
-                        sh 'aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ECR_REPO'
-                        sh "docker tag $DOCKERHUB_REPO:$IMAGE_TAG $ECR_REPO:$IMAGE_TAG"
-                        sh "docker push $ECR_REPO:$IMAGE_TAG"
-                    }
-                }
-            }
-        }
-
-        stage('Update Helm values.yaml') {
-            steps {
-                script {
-                    // Update the Helm values.yaml with the new image tag and NodePort
+                    echo "Logging in and pushing to DockerHub..."
                     sh """
-                    sed -i 's/tag: .*/tag: $IMAGE_TAG/' path/to/helm/values.yaml
-                    sed -i 's/nodePort: .*/nodePort: 30976/' path/to/helm/values.yaml  # Update NodePort to 30976
+                        echo "${DOCKERHUB_CREDENTIALS_PSW}" | docker login -u "${DOCKERHUB_CREDENTIALS_USR}" --password-stdin
+                        docker push ${DOCKERHUB_REPO}:${IMAGE_TAG}
+                        docker logout
                     """
                 }
             }
         }
+
+        stage('Push to AWS ECR') {
+            steps {
+                script {
+                    echo "Logging in and pushing to AWS ECR..."
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-ecr-creds']]) {
+                        sh """
+                            aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ECR_REPO}
+                            docker push ${ECR_REPO}:${IMAGE_TAG}
+                            docker logout
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Update Helm Values') {
+            steps {
+                script {
+                    echo "Updating Helm values.yaml..."
+                    sh """
+                        sed -i 's|repository:.*|repository: ${DOCKERHUB_REPO}|' helm/values.yaml
+                        sed -i 's|tag:.*|tag: ${IMAGE_TAG}|' helm/values.yaml
+                    """
+                }
+            }
+        }
+
+        stage('Push Helm Changes') {
+            steps {
+                script {
+                    echo "Committing and pushing Helm changes to GitHub..."
+                    withCredentials([usernamePassword(credentialsId: 'GitAccess', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASSWORD')]) {
+                        // URL encode the GitHub username to handle special characters like '@'
+                        def encodedUsername = GIT_USER.replace('@', '%40')
+
+                        sh """
+                            git config user.email 'ci@jenkins.com'
+                            git config user.name 'Jenkins CI'
+
+                            # Ensure we are on the 'main' branch before committing and pushing
+                            git checkout main || git checkout -b main  # Checkout main or create if doesn't exist
+
+                            git add helm/values.yaml
+                            git diff --cached --quiet || git commit -m 'Update image tag to ${IMAGE_TAG}'
+
+                            # Push the changes using the GitHub credentials for authentication
+                            git push https://${encodedUsername}:${GIT_PASSWORD}@github.com/AvikBhattacharya-Secops/complete-project-all.git main
+                        """
+                    }
+                }
+            }
+        }
+
 
         stage('Deploy to Kubernetes') {
             steps {
