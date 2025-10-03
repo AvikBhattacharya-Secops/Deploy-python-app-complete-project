@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_HUB_REPO = 'yourusername/yourrepo'
+        AWS_ECR_REPO = 'aws_account_id.dkr.ecr.region.amazonaws.com/yourrepo'
+        AWS_REGION = 'region'
+        IMAGE_TAG = "${env.BUILD_ID}"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh 'docker build -t $DOCKER_HUB_REPO:$IMAGE_TAG .'
+                }
+            }
+        }
+
+        stage('Push Docker Image to DockerHub') {
+            steps {
+                script {
+                    sh "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
+                    sh "docker push $DOCKER_HUB_REPO:$IMAGE_TAG"
+                }
+            }
+        }
+
+        stage('Push Docker Image to AWS ECR') {
+            steps {
+                script {
+                    sh 'aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ECR_REPO'
+                    sh "docker tag $DOCKER_HUB_REPO:$IMAGE_TAG $AWS_ECR_REPO:$IMAGE_TAG"
+                    sh "docker push $AWS_ECR_REPO:$IMAGE_TAG"
+                }
+            }
+        }
+    }
+}
