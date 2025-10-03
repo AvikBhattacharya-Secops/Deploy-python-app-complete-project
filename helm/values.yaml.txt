@@ -1,0 +1,15 @@
+replicaCount: 2
+
+image:
+  repository: "avikbhattacharya056/my-python-app-image"
+  tag: "latest"  # This will be updated by the pipeline with $IMAGE_TAG
+
+service:
+  type: LoadBalancer  # Expose your app via a load balancer  type: LoadBalancer
+  port: 80
+  targetPort: 8080
+
+resources: {}
+
+
+
