@@ -13,7 +13,7 @@ pipeline {
         AWS_ACCOUNT_ID = '439110395780'
         ECR_REPO = "${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/my-repo" // Ensure ECR repo exists
         DOCKERHUB_REPO = 'avikbhattacharya056/my-python-app-image'  // Ensure DockerHub repo exists
-        ARGOCD_SERVER = '52.66.125.111:30976'  // Ensure ArgoCD server is reachable
+        ARGOCD_SERVER = '65.1.136.255:30976'  // Ensure ArgoCD server is reachable
         GITHUB_REPO = 'https://github.com/AvikBhattacharya-Secops/Deploy-python-app-complete-project.git' // GitHub repo for the new app
     }
 
