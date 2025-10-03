@@ -15,6 +15,8 @@ K8s exposes the service via LoadBalancer
 Optionally scales based on traffic
 
 Deploy-python-app-complete-project/
+
+
 ├── helm/
 │   ├── Chart.yaml               # Helm chart metadata
 │   ├── values.yaml              # Configuration for Helm deployment
