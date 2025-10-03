@@ -82,22 +82,21 @@ pipeline {
                 script {
                     echo "Committing and pushing Helm changes to GitHub..."
                     withCredentials([usernamePassword(credentialsId: 'GitAccess', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASSWORD')]) {
+                        // URL encode the GitHub username to handle special characters like '@'
                         def encodedUsername = GIT_USER.replace('@', '%40')
 
                         sh """
                             git config user.email 'ci@jenkins.com'
                             git config user.name 'Jenkins CI'
 
-                            # Checkout main branch and pull latest changes
-                            git checkout main
-                            git pull --rebase origin main
+                            # Ensure we are on the 'main' branch before committing and pushing
+                            git checkout main || git checkout -b main  # Checkout main or create if doesn't exist
 
-                            # Stage and commit changes if any
                             git add helm/values.yaml
                             git diff --cached --quiet || git commit -m 'Update image tag to ${IMAGE_TAG}'
 
-                            # Push changes to remote
-                            git push https://${encodedUsername}:${GIT_PASSWORD}@github.com/AvikBhattacharya-Secops/complete-project-all.git main
+                            # Push the changes using the GitHub credentials for authentication
+                            git push https://${encodedUsername}:${GIT_PASSWORD}@github.com/AvikBhattacharya-Secops/Deploy-python-app-complete-project.git main
                         """
                     }
                 }
