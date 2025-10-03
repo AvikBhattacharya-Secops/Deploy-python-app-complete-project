@@ -3,18 +3,18 @@ pipeline {
 
     environment {
         // Jenkins credentials
-        DOCKERHUB_CREDENTIALS = credentials('docker-hub-creds')              // DockerHub
-        GIT_CREDENTIALS = credentials('GitAccess')                          // GitHub access
-        ARGOCD_CREDENTIALS = credentials('argocd')                         // ArgoCD access
+        DOCKERHUB_CREDENTIALS = credentials('docker-hub-creds')            // DockerHub credentials
+        GIT_CREDENTIALS = credentials('GitAccess')                         // GitHub credentials
+        ARGOCD_CREDENTIALS = credentials('argocd')                         // ArgoCD credentials
 
         // AWS and DockerHub details
         REGION = 'ap-south-1'
         IMAGE_TAG = "${BUILD_NUMBER}"
         AWS_ACCOUNT_ID = '439110395780'
-        ECR_REPO = "${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/my-repo"
-        DOCKERHUB_REPO = 'avikbhattacharya056/my-python-app-image'
-        ARGOCD_SERVER = '65.1.136.255:30976'
-        GITHUB_REPO = 'https://github.com/AvikBhattacharya-Secops/Deploy-python-app-complete-project.git'
+        ECR_REPO = "${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/my-repo" // Ensure ECR repo exists
+        DOCKERHUB_REPO = 'avikbhattacharya056/my-python-app-image'  // Ensure DockerHub repo exists
+        ARGOCD_SERVER = '52.66.125.111:30976'  // Ensure ArgoCD server is reachable
+        GITHUB_REPO = 'https://github.com/AvikBhattacharya-Secops/Deploy-python-app-complete-project.git' // GitHub repo for the new app
     }
 
     stages {
@@ -90,4 +90,3 @@ pipeline {
             }
         }
     }
-}
