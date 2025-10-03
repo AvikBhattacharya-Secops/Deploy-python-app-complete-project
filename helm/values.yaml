@@ -1,16 +1,21 @@
+# values.yaml
+
 image:
-  repository: myrepo/python-app  # Your image repository
-  tag: v1.0.0  # Your image tag
+  repository: avikbhattacharya056/python-app  # Replace with your actual image repository
+  tag: v1.0.0  # Replace with your actual image tag
 
 replicaCount: 3  # Number of replicas for the deployment
 
 service:
-  type: NodePort  # Set to NodePort for UI exposure
-  port: 80  # External port (on the service)
-  targetPort: 80  # Port inside the pod (this is already 80)
-  nodePort: 30080  # Specific port on which the service will be exposed (choose an available port)
-  
-resources: {}
+  type: NodePort  # Set to NodePort to expose the service via NodePort
+  port: 80  # External port on the service (e.g., UI exposed on this port)
+  targetPort: 80  # Port inside the container (typically the same as the exposed one)
+  nodePort: 30080  # Port on the node that will be exposed (adjust if needed)
+
+resources: {}  # Optionally, define resource requests/limits here
+
+
+
 
 
 
