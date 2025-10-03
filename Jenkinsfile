@@ -93,7 +93,13 @@ pipeline {
                             # Ensure we are on the 'main' branch before committing and pushing
                             git checkout main || git checkout -b main  # Checkout main or create if doesn't exist
 
+                            # Pull the latest changes to avoid conflicts
+                            git pull origin main || true  # Continue even if there's a conflict
+
+                            # Stage the changes
                             git add helm/values.yaml
+
+                            # Only commit if there are changes
                             git diff --cached --quiet || git commit -m 'Update image tag to ${IMAGE_TAG}'
 
                             # Push the changes using the GitHub credentials for authentication
@@ -103,7 +109,6 @@ pipeline {
                 }
             }
         }
-
 
         stage('Deploy to Kubernetes') {
             steps {
