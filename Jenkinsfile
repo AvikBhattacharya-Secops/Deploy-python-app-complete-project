@@ -22,7 +22,6 @@ pipeline {
             steps {
                 script {
                     echo "Cloning from GitHub main branch..."
-                    // Checkout the repo using the Git plugin with credentials
                     checkout scm
                 }
             }
@@ -83,26 +82,21 @@ pipeline {
                 script {
                     echo "Committing and pushing Helm changes to GitHub..."
                     withCredentials([usernamePassword(credentialsId: 'GitAccess', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASSWORD')]) {
-                        // URL encode the GitHub username to handle special characters like '@'
                         def encodedUsername = GIT_USER.replace('@', '%40')
 
                         sh """
                             git config user.email 'ci@jenkins.com'
                             git config user.name 'Jenkins CI'
 
-                            # Ensure we commit any changes before switching branches
-                            git add helm/values.yaml
+                            # Checkout main branch and pull latest changes
+                            git checkout main
+                            git pull --rebase origin main
 
-                            # If there are uncommitted changes, commit them
+                            # Stage and commit changes if any
+                            git add helm/values.yaml
                             git diff --cached --quiet || git commit -m 'Update image tag to ${IMAGE_TAG}'
 
-                            # Pull the latest changes from the remote before pushing
-                            git pull origin main || exit 1
-
-                            # Checkout the main branch (no errors if it already exists)
-                            git checkout main || git checkout -b main  # If main doesn't exist, create it
-
-                            # Push the changes using the GitHub credentials for authentication
+                            # Push changes to remote
                             git push https://${encodedUsername}:${GIT_PASSWORD}@github.com/AvikBhattacharya-Secops/complete-project-all.git main
                         """
                     }
@@ -134,7 +128,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
             cleanWs()  // Clean workspace after every build
