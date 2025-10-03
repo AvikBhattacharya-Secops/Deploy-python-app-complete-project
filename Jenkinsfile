@@ -96,6 +96,9 @@ pipeline {
                             # If there are uncommitted changes, commit them
                             git diff --cached --quiet || git commit -m 'Update image tag to ${IMAGE_TAG}'
 
+                            # Pull the latest changes from the remote before pushing
+                            git pull origin main || exit 1
+
                             # Checkout the main branch (no errors if it already exists)
                             git checkout main || git checkout -b main  # If main doesn't exist, create it
 
@@ -110,9 +113,10 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
+                    echo "Deploying to Kubernetes using Helm..."
                     withCredentials([usernamePassword(credentialsId: 'argocd', usernameVariable: 'ARGO_USERNAME', passwordVariable: 'ARGO_PASSWORD')]) {
                         sh """
-                        helm upgrade --install my-python-app ./path/to/helm/chart --set image.tag=$IMAGE_TAG --set service.type=NodePort --set service.nodePort=30976
+                            helm upgrade --install my-python-app ./path/to/helm/chart --set image.tag=${IMAGE_TAG} --set service.type=NodePort --set service.nodePort=30976
                         """
                     }
                 }
@@ -122,12 +126,18 @@ pipeline {
         stage('Expose App via NodePort') {
             steps {
                 script {
-                    // Expose the app on NodePort (30976)
+                    echo "Exposing app via NodePort..."
                     sh """
-                    kubectl expose deployment my-python-app --type=NodePort --name=my-python-app-service --port=80 --target-port=80 --node-port=30976
+                        kubectl expose deployment my-python-app --type=NodePort --name=my-python-app-service --port=80 --target-port=80 --node-port=30976
                     """
                 }
             }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()  // Clean workspace after every build
         }
     }
 }
