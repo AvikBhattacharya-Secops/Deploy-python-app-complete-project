@@ -1,8 +1,8 @@
 # values.yaml
 
 image:
-  repository: avikbhattacharya056/python-app  # Replace with your actual image repository
-  tag: v1.0.0  # Replace with your actual image tag
+  repository: avikbhattacharya056/my-python-app-image
+  tag: 12
 
 replicaCount: 3  # Number of replicas for the deployment
 
