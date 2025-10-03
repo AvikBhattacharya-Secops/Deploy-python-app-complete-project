@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: python-app
 spec:
-  replicas: 3
+  replicas: {{ .Values.replicaCount }}  # Number of replicas
   selector:
     matchLabels:
       app: python-app
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: python-app
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"  # Image from values.yaml
           ports:
             - containerPort: 80
 ---
@@ -27,6 +27,7 @@ spec:
     app: python-app
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 80
-  type: LoadBalancer
+      port: {{ .Values.service.port }}  # External port from values.yaml
+      targetPort: {{ .Values.service.targetPort }}  # Port inside the container (usually 80)
+      nodePort: {{ .Values.service.nodePort }}  # Expose on NodePort from values.yaml
+  type: {{ .Values.service.type }}  # This will be NodePort as per values.yaml
